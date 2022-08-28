@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -94,6 +95,34 @@ func init() {
 	cobra.OnInitialize()
 	RootCmd.Flags().BoolVarP(&o.popularSort, "popular", "p", false, "Order popular")
 	RootCmd.Flags().BoolVarP(&o.linkmode, "linkmode", "l", false, "Enable link mode")
+}
+
+func openBrowser(url string) error {
+	var openCmd string
+	var args []string
+	var stderr bytes.Buffer
+
+	switch runtime.GOOS {
+	case "darwin":
+		openCmd = "open"
+	case "windows":
+		openCmd = "cmd"
+		args = []string{"/c", "start"}
+	case "linux": // TODO
+		openCmd = "xdg-open"
+	default:
+		return fmt.Errorf("Not support os: %v", runtime.GOOS)
+	}
+
+	args = append(args, url)
+	cmd := exec.Command(openCmd, args...)
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("Open browser faild %v\n%v\n", err, stderr.String())
+	}
+
+	return nil
 }
 
 var RootCmd = &cobra.Command{
@@ -186,17 +215,10 @@ var RootCmd = &cobra.Command{
 				}
 			}
 
-			var stderr bytes.Buffer
-
-			// TODO: Support a Linux and windows
 			fmt.Printf("Open URL: %s\n", openUrl)
 
-			cmd := exec.Command("open", openUrl)
-			cmd.Stderr = &stderr
-
-			err = cmd.Run()
-			if err != nil {
-				fmt.Printf("Open browser faild %v\n%v\n", err, stderr.String())
+			if err := openBrowser(openUrl); err != nil {
+				fmt.Println(err)
 				os.Exit(1)
 			}
 		} else {
