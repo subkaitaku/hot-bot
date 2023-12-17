@@ -125,6 +125,7 @@ func RenderHotentry(w http.ResponseWriter, r *http.Request) {
 			"blog.livedoor.jp",
 			"twitter.com",
 			"x.com",
+			"kyoko-np.net",
 			"2ch",
 			"5ch",
 		}
@@ -145,6 +146,8 @@ func RenderHotentry(w http.ResponseWriter, r *http.Request) {
 			"遺憾",
 			"駆け出し",
 			"マルチ",
+			"必見",
+			"ヤバすぎた",
 		}
 		if bws.Match(bookmark.Title) {
 			continue
