@@ -2,14 +2,18 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 
-	"github.com/shinshin86/chv/cmd"
+	"github.com/subkaitaku/hot-bot/hatebu"
 )
 
 func main() {
-	if err := cmd.RootCmd.Execute(); err != nil {
-		fmt.Println(err)
+	http.HandleFunc("/", hatebu.PrintHatebu)
+	fmt.Println("listen and serve on :8080")
+	err := http.ListenAndServe("127.0.0.1:8080", nil)
+	if err != nil {
+		fmt.Printf("error: %v", err)
 		os.Exit(1)
 	}
 }
