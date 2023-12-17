@@ -177,7 +177,11 @@ func RenderHotentry(w http.ResponseWriter, r *http.Request) {
 			{{range .}}
 				<li><a href="{{.URL}}" target="_blank">{{.Title}}</a></li>
 				<p>{{.Description}}</p>
+				{{if .ImageURL}}
 				<img src="{{.ImageURL}}" alt="alt" width="227" height="127">
+				{{else}}
+				<img src="https://placehold.jp/227x127.png?text=noimage" alt="alt" width="227" height="127">
+				{{end}}
 			{{end}}
 		</ul>
 	</body>
