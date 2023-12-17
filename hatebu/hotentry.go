@@ -20,14 +20,17 @@ type HotEntry struct {
 type Item struct {
 	Title         string `xml:"title"`
 	Link          string `xml:"link"`
+	ImageURL      string `xml:"imageurl"`
 	Description   string `xml:"description"`
 	Date          string `xml:"date"`
 	BookmarkCount int    `xml:"bookmarkcount"`
 }
 
 type Content struct {
-	Title string
-	URL   string
+	Title       string
+	URL         string
+	ImageURL    string
+	Description string
 }
 
 type blockDomain string
@@ -149,7 +152,14 @@ func RenderHotentry(w http.ResponseWriter, r *http.Request) {
 
 		title := bookmark.Title
 		link := bookmark.Link
-		contents = append(contents, Content{runewidth.FillRight(replaceOverflowText(title, titleWidth), titleWidth), fmt.Sprintf(urlFmt, link)})
+		imageURL := bookmark.ImageURL
+		description := bookmark.Description
+		contents = append(contents, Content{
+			runewidth.FillRight(replaceOverflowText(title, titleWidth), titleWidth),
+			fmt.Sprintf(urlFmt, link),
+			imageURL,
+			description,
+		})
 	}
 
 	htmlTemplate := `
@@ -163,6 +173,8 @@ func RenderHotentry(w http.ResponseWriter, r *http.Request) {
 		<ul>
 			{{range .}}
 				<li><a href="{{.URL}}" target="_blank">{{.Title}}</a></li>
+				<p>{{.Description}}</p>
+				<img src="{{.ImageURL}}" alt="alt" width="227" height="127">
 			{{end}}
 		</ul>
 	</body>
