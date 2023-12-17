@@ -9,9 +9,9 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/", hatebu.PrintHatebu)
 	fmt.Println("listen and serve on :8080")
 	err := http.ListenAndServe("127.0.0.1:8080", nil)
+	http.HandleFunc("/", hatebu.RenderHotentry)
 	if err != nil {
 		fmt.Printf("error: %v", err)
 		os.Exit(1)

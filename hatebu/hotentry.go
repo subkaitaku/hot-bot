@@ -96,7 +96,7 @@ func replaceOverflowText(text string, width int) string {
 	}
 }
 
-func PrintHatebu(w http.ResponseWriter, r *http.Request) {
+func RenderHotentry(w http.ResponseWriter, r *http.Request) {
 	data := httpGet("http://b.hatena.ne.jp/hotentry/it.rss")
 
 	hotentry := HotEntry{}
