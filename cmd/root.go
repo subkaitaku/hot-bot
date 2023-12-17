@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -56,7 +56,7 @@ func httpGet(url string) string {
 		os.Exit(1)
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
+	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		fmt.Printf("error: %v", err)
 		os.Exit(1)
