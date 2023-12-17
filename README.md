@@ -6,4 +6,6 @@ Hatebu Server
 
 ```sh
 $ go run main.go
+or
+$ air
 ```
