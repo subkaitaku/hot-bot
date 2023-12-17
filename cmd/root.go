@@ -37,6 +37,12 @@ type Options struct {
 	linkmode    bool
 }
 
+type blockDomain string
+type blockDomains []blockDomain
+
+type blockWord string
+type blockWords []blockWord
+
 var o = &Options{}
 
 func getSelectedUrl(hatebu string) string {
@@ -97,6 +103,24 @@ func init() {
 	RootCmd.Flags().BoolVarP(&o.linkmode, "linkmode", "l", false, "Enable link mode")
 }
 
+func (ds blockDomains) Match(url string) bool {
+	for _, d := range ds {
+		if strings.Contains(url, string(d)) {
+			return true
+		}
+	}
+	return false
+}
+
+func (ws blockWords) Match(title string) bool {
+	for _, w := range ws {
+		if strings.Contains(title, string(w)) {
+			return true
+		}
+	}
+	return false
+}
+
 func openBrowser(url string) error {
 	var openCmd string
 	var args []string
@@ -124,6 +148,7 @@ func openBrowser(url string) error {
 
 	return nil
 }
+
 
 var RootCmd = &cobra.Command{
 	Use:   "chv",
@@ -231,6 +256,37 @@ var RootCmd = &cobra.Command{
 			fmt.Println(strings.Repeat("-", bookmarkWidth+titleWidth+urlWidth))
 
 			for _, bookmark := range hotentry.Items {
+				var bds blockDomains
+				bds = []blockDomain{
+					"anond.hatelabo.jp",
+					"togetter.com",
+					"gizmodo.jp",
+					"blog.livedoor.jp",
+					"twitter.com",
+					"x.com",
+				}
+				if bds.Match(bookmark.Link) {
+					continue
+				}
+
+				var bws blockWords
+				bws = []blockWord{
+					"ハッとした",
+					"常識",
+					"残念",
+					"必見",
+					"政治",
+					"ヤバい",
+					"初心者",
+					"驚愕",
+					"遺憾",
+					"駆け出し",
+					"マルチ",
+				}
+				if bws.Match(bookmark.Title) {
+					continue
+				}
+
 				title := bookmark.Title
 				link := bookmark.Link
 				fmt.Fprintf(
@@ -238,7 +294,6 @@ var RootCmd = &cobra.Command{
 					" %s | %s | %s \n",
 					color.YellowString(fmt.Sprintf(bookmarkFmt, strconv.Itoa(bookmark.BookmarkCount))),
 					color.CyanString(runewidth.FillRight(replaceOverflowText(title, titleWidth), titleWidth)),
-					// All link strings are displayed so that users can follow them
 					fmt.Sprintf(urlFmt, link),
 				)
 			}
