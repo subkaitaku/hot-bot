@@ -1,4 +1,4 @@
-# chv
+# Hotentry
 
 Hatebu Server 
 
