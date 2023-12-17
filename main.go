@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/subkaitaku/hot-bot/hatebu"
+	"github.com/subkaitaku/hotentry/hatebu"
 )
 
 func main() {

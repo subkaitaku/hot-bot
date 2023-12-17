@@ -1,4 +1,4 @@
-module github.com/subkaitaku/hot-bot
+module github.com/subkaitaku/hotentry
 
 go 1.19
 
