@@ -10,7 +10,10 @@ import (
 	"text/template"
 	"unicode/utf8"
 
+	"database/sql"
+
 	"github.com/mattn/go-runewidth"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type HotEntry struct {
@@ -100,11 +103,30 @@ func replaceOverflowText(text string, width int) string {
 }
 
 func RenderHotentry(w http.ResponseWriter, r *http.Request) {
+	db, err := sql.Open("sqlite3", "./hotentry.db")
+	if err != nil {
+		fmt.Printf("sqlite open error: %v", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS BlockDomains (domain TEXT PRIMARY KEY)")
+	if err != nil {
+		fmt.Printf("table error: %v", err)
+		os.Exit(1)
+	}
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS BlockWords (word TEXT PRIMARY KEY)")
+	if err != nil {
+		fmt.Printf("table error: %v", err)
+		os.Exit(1)
+	}
+
 	data := httpGet("http://b.hatena.ne.jp/hotentry/it.rss")
 
 	hotentry := HotEntry{}
 
-	err := xml.Unmarshal([]byte(data), &hotentry)
+	err = xml.Unmarshal([]byte(data), &hotentry)
 
 	if err != nil {
 		fmt.Printf("error: %v", err)
@@ -118,36 +140,40 @@ func RenderHotentry(w http.ResponseWriter, r *http.Request) {
 	contents := []Content{}
 	for _, bookmark := range hotentry.Items {
 		var bds blockDomains
-		bds = []blockDomain{
-			"anond.hatelabo.jp",
-			"togetter.com",
-			"gizmodo.jp",
-			"blog.livedoor.jp",
-			"twitter.com",
-			"x.com",
-			"kyoko-np.net",
-			"2ch",
-			"5ch",
+		rows, err := db.Query("SELECT domain FROM BlockDomains")
+		if err != nil {
+			fmt.Printf("select error: %v", err)
+			os.Exit(1)
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var domain string
+			err = rows.Scan(&domain)
+			if err != nil {
+				fmt.Printf("scan error: %v", err)
+				os.Exit(1)
+			}
+			bds = append(bds, blockDomain(domain))
 		}
 		if bds.Match(bookmark.Link) {
 			continue
 		}
 
 		var bws blockWords
-		bws = []blockWord{
-			"ハッとした",
-			"常識",
-			"残念",
-			"必見",
-			"政治",
-			"ヤバい",
-			"初心者",
-			"驚愕",
-			"遺憾",
-			"駆け出し",
-			"マルチ",
-			"必見",
-			"ヤバすぎた",
+		rows, err = db.Query("SELECT word FROM BlockWords")
+		if err != nil {
+			fmt.Printf("select error: %v", err)
+			os.Exit(1)
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var word string
+			err = rows.Scan(&word)
+			if err != nil {
+				fmt.Printf("scan error: %v", err)
+				os.Exit(1)
+			}
+			bws = append(bws, blockWord(word))
 		}
 		if bws.Match(bookmark.Title) {
 			continue
@@ -173,6 +199,15 @@ func RenderHotentry(w http.ResponseWriter, r *http.Request) {
 	</head>
 	<body>
 		<h1>Hatebu Hotentry</h1>
+		<form action="/register" method="post">
+			<label for="domain">Block Domain:</label><br>
+			<input type="text" id="domain" name="domain" value=""><br>
+
+			<label for="word">Block Word:</label><br>
+			<input type="text" id="word" name="word" value=""><br>
+
+			<input type="submit" value="Submit">
+		</form>
 		<ul>
 			{{range .}}
 				<li><a href="{{.URL}}" target="_blank">{{.Title}}</a></li>
@@ -199,4 +234,51 @@ func RenderHotentry(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func RegisterBlock(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	domain := r.FormValue("domain")
+	word := r.FormValue("word")
+
+	db, err := sql.Open("sqlite3", "./hotentry.db")
+	if err != nil {
+		fmt.Printf("sqlite open error: %v", err)
+		os.Exit(1)
+	}
+	defer db.Close()
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS BlockDomains (domain TEXT PRIMARY KEY)")
+	if err != nil {
+		fmt.Printf("table error: %v", err)
+		os.Exit(1)
+	}
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS BlockWords (word TEXT PRIMARY KEY)")
+	if err != nil {
+		fmt.Printf("table error: %v", err)
+		os.Exit(1)
+	}
+
+	if domain != "" {
+		_, err = db.Exec("INSERT INTO BlockDomains (domain) VALUES (?)", domain)
+		if err != nil {
+			fmt.Printf("insert error: %v", err)
+			os.Exit(1)
+		}
+	}
+
+	if word != "" {
+		_, err = db.Exec("INSERT INTO BlockWords (word) VALUES (?)", word)
+		if err != nil {
+			fmt.Printf("insert error: %v", err)
+			os.Exit(1)
+		}
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
