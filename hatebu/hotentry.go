@@ -41,12 +41,13 @@ type blockWords []blockWord
 
 var (
 	blockedDomains = blockDomains{
-		"example.com",
-		"blockeddomain.com",
+		"anond.hatelabo.jp",
+		"togetter.com",
+		"gizmodo.jp",
+		"nlab.itmedia.co.jp/",
 	}
 	blockedWords = blockWords{
-		"blockedword1",
-		"blockedword2",
+		"ヤバい",
 	}
 )
 
